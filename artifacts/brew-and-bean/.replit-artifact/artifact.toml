@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Brew & Bean"
+description = "A premium café web experience for Brew & Bean, with a cinematic hero, interactive coffee menu, product customization, cart, offers, and table booking."
+version = "1.0.0"
+id = "artifacts/brew-and-bean"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22669
+
+[services.development]
+run = "pnpm --filter @workspace/brew-and-bean run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/brew-and-bean", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/brew-and-bean/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22669"
+BASE_PATH = "/"

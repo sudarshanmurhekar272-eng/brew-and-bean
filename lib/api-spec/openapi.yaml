@@ -1,0 +1,217 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: orders
+    description: Café order operations
+  - name: bookings
+    description: Table reservation operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Place a café order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderInput"
+      responses:
+        "201":
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /bookings:
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Reserve a café table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Invalid booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        size:
+          type: string
+        milk:
+          type: string
+        unitPrice:
+          type: number
+      required: [productId, name, quantity, size, milk, unitPrice]
+    OrderInput:
+      type: object
+      properties:
+        customerName:
+          type: string
+          minLength: 1
+        customerEmail:
+          type: string
+          format: email
+        orderType:
+          type: string
+          enum: [pickup, dine-in]
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        total:
+          type: number
+          minimum: 0
+      required: [customerName, customerEmail, orderType, items, total]
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [placed, preparing, ready]
+        prepMinutes:
+          type: integer
+        eta:
+          type: string
+          format: date-time
+        total:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, status, prepMinutes, eta, total, createdAt]
+    BookingInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+          minLength: 1
+        partySize:
+          type: integer
+          minimum: 1
+          maximum: 20
+      required: [name, email, date, time, partySize]
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        partySize:
+          type: integer
+        status:
+          type: string
+          enum: [confirmed]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, date, time, partySize, status, createdAt]
+
